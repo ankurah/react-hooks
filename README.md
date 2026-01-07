@@ -1,6 +1,10 @@
 # @ankurah/react-hooks
 
-React hooks for Ankurah signal reactivity. Works with both React Native (UniFFI bindings) and React Web (WASM bindings).
+Official React bindings for [Ankurah](https://ankurah.org) — the distributed state synchronization framework.
+
+This package provides fine-grained reactivity for React applications using Ankurah's signal-based state management. Components automatically re-render when the specific signals they access change, with zero manual subscription management.
+
+**Works with both React Native (UniFFI) and React Web (WASM).**
 
 ## Installation
 
@@ -8,24 +12,80 @@ React hooks for Ankurah signal reactivity. Works with both React Native (UniFFI 
 npm install @ankurah/react-hooks
 ```
 
-## Usage
-
-This package exports a factory function that creates hooks bound to your specific Ankurah bindings:
+## Quick Start
 
 ```typescript
+import React from 'react';
 import { createAnkurahReactHooks } from '@ankurah/react-hooks';
-import { ReactObserver } from './generated/ankurah_signals'; // Your generated bindings
+import { ReactObserver } from './generated/ankurah_signals';
 
-const { useObserve, signalObserver } = createAnkurahReactHooks({ ReactObserver });
+// Create hooks bound to your bindings
+const { signalObserver } = createAnkurahReactHooks({ React, ReactObserver });
 
-// Use signalObserver HOC to automatically track signal access
-const MyComponent = signalObserver(({ name }) => {
-  const count = countSignal.get(); // Automatically tracked
-  return <div>{name}: {count}</div>;
+// Components automatically re-render when signals change
+const MessageCount = signalObserver(() => {
+  const count = messageQuery.length(); // Automatically tracked
+  return <span>{count} messages</span>;
 });
 
-// Or use useObserve directly for more control
-function MyManualComponent() {
+const MessageList = signalObserver(() => {
+  const messages = messageQuery.items(); // Live query results
+  return (
+    <ul>
+      {messages.map(msg => (
+        <li key={msg.id()}>{msg.content()}</li>
+      ))}
+    </ul>
+  );
+});
+```
+
+## Why Ankurah?
+
+Ankurah provides real-time data synchronization across distributed systems with built-in observability. Key features:
+
+- **Live Queries** — Subscribe to filtered data that updates automatically
+- **Fine-grained Reactivity** — Only re-render what actually changed
+- **Schema-first Design** — Rust macros generate type-safe bindings
+- **Multi-platform** — Same patterns work on web, mobile, and server
+
+Learn more at [ankurah.org](https://ankurah.org)
+
+## API
+
+### `createAnkurahReactHooks(bindings)`
+
+Factory function that creates React hooks bound to your Ankurah bindings.
+
+```typescript
+const { useObserve, signalObserver } = createAnkurahReactHooks({
+  React,           // Your React instance
+  ReactObserver,   // From generated Ankurah bindings
+});
+```
+
+**Why pass React?** This avoids module resolution issues in monorepos and ensures the hooks use the same React instance as your app — critical for hooks to work correctly.
+
+### `signalObserver<P>(Component)`
+
+Higher-order component that enables automatic signal tracking.
+
+```typescript
+const MyComponent = signalObserver((props) => {
+  // Any signal.get() calls here are automatically tracked
+  const value = someSignal.get();
+  return <div>{value}</div>;
+});
+```
+
+When any accessed signal changes, the component re-renders. No manual subscriptions, no cleanup, no stale data.
+
+### `useObserve()`
+
+Low-level hook for manual tracking control. Most users should prefer `signalObserver`.
+
+```typescript
+function MyComponent() {
   const observer = useObserve();
   observer.beginTracking();
   try {
@@ -37,37 +97,16 @@ function MyManualComponent() {
 }
 ```
 
-## Why a factory function?
+## Platform Support
 
-The hooks need to close over the `ReactObserver` class from your bindings. Since WASM and UniFFI generate different binding code, this factory pattern allows the same hook implementations to work with either:
+This package works with both Ankurah binding types:
 
-- **React Web (WASM)**: `ReactObserver` from `ankurah-wasm-bindings`
-- **React Native (UniFFI)**: `ReactObserver` from generated UniFFI TypeScript
+| Platform | Bindings | Generated From |
+|----------|----------|----------------|
+| React Web | WASM | `ankurah-wasm` crate |
+| React Native | UniFFI | `uniffi-bindgen-react-native` |
 
-## API
-
-### `createAnkurahReactHooks(bindings)`
-
-Creates the hooks bound to your bindings.
-
-**Parameters:**
-- `bindings.ReactObserver` - The ReactObserver class from your generated bindings
-
-**Returns:**
-- `useObserve()` - Hook that returns a ReactObserver instance wired up to React's useSyncExternalStore
-- `signalObserver(fc)` - HOC that wraps a component to automatically track signal access
-
-### `signalObserver<P>(fc: React.FC<P>): React.FC<P>`
-
-Higher-order component that wraps a function component to track signal access.
-
-Any signals accessed during render (via `.get()`) are automatically subscribed to. When those signals change, the component re-renders.
-
-### `useObserve(): ReactObserver`
-
-Low-level hook that returns a ReactObserver. Use this if you need manual control over tracking.
-
-Call `observer.beginTracking()` before accessing signals and `observer.finish()` afterwards (in a finally block).
+The factory pattern allows the same hook implementations to work with either binding type.
 
 ## License
 
