@@ -103,7 +103,7 @@ This package works with both Ankurah binding types:
 
 | Platform | Bindings | Generated From |
 |----------|----------|----------------|
-| React Web | WASM | `ankurah-wasm` crate |
+| React Web | WASM | `ankurah-signals` crate (via `ankurah::signals`) |
 | React Native | UniFFI | `uniffi-bindgen-react-native` |
 
 The factory pattern allows the same hook implementations to work with either binding type.

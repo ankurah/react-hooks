@@ -1,6 +1,6 @@
 {
   "name": "@ankurah/react-hooks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React hooks for Ankurah signal reactivity - works with both React Native (UniFFI) and React Web (WASM)",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
