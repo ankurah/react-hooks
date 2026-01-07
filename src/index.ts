@@ -6,19 +6,21 @@
  *
  * Usage:
  * ```typescript
+ * import React from 'react';
  * import { createAnkurahReactHooks } from '@ankurah/react-hooks';
  * import { ReactObserver } from './generated/ankurah_signals';
  *
- * const { useObserve, signalObserver } = createAnkurahReactHooks({ ReactObserver });
+ * const { useObserve, signalObserver } = createAnkurahReactHooks({
+ *   React,
+ *   ReactObserver,
+ * });
  *
- * const MyComponent = signalObserver(() => {
- *   // Signals accessed here are automatically tracked
- *   return <div>{someSignal.get()}</div>;
+ * const MyComponent = signalObserver(({ name }) => {
+ *   const count = countSignal.get(); // Automatically tracked
+ *   return <div>{name}: {count}</div>;
  * });
  * ```
  */
-
-import { useRef, useCallback, useSyncExternalStore } from 'react';
 
 /**
  * Interface for the ReactObserver class from Ankurah bindings.
@@ -55,10 +57,26 @@ export interface ReactObserverConstructor {
 }
 
 /**
+ * Minimal React interface needed by this package.
+ * The consumer passes their React instance to avoid bundling/resolution issues.
+ */
+export interface ReactLike {
+  useRef<T>(initialValue: T | null): { current: T | null };
+  useCallback<T extends (...args: any[]) => any>(callback: T, deps: readonly any[]): T;
+  useSyncExternalStore<T>(
+    subscribe: (onStoreChange: () => void) => () => void,
+    getSnapshot: () => T,
+  ): T;
+}
+
+/**
  * Bindings required to create the hooks.
- * Pass the ReactObserver class from your generated bindings.
+ * Pass React and the ReactObserver class from your generated bindings.
  */
 export interface AnkurahBindings {
+  /** React instance - avoids bundling/resolution issues */
+  React: ReactLike;
+  /** ReactObserver class from your generated bindings */
   ReactObserver: ReactObserverConstructor;
 }
 
@@ -66,13 +84,15 @@ export interface AnkurahBindings {
  * Creates Ankurah React hooks bound to your specific bindings.
  *
  * This factory pattern allows the same hook implementations to work with
- * both WASM (React web) and UniFFI (React Native) bindings.
+ * both WASM (React web) and UniFFI (React Native) bindings. Passing React
+ * explicitly avoids bundling and module resolution issues.
  *
- * @param bindings - Object containing the ReactObserver class from your bindings
+ * @param bindings - Object containing React and the ReactObserver class
  * @returns Object containing useObserve hook and signalObserver HOC
  */
 export function createAnkurahReactHooks(bindings: AnkurahBindings) {
-  const { ReactObserver } = bindings;
+  const { React, ReactObserver } = bindings;
+  const { useRef, useCallback, useSyncExternalStore } = React;
 
   /**
    * Hook that enables automatic re-rendering when observed signals change.
@@ -148,8 +168,8 @@ export function createAnkurahReactHooks(bindings: AnkurahBindings) {
    * ```
    */
   function signalObserver<P extends object>(
-    fc: React.FC<P>
-  ): React.FC<P> {
+    fc: (props: P) => React.ReactNode
+  ): (props: P) => React.ReactNode {
     return function SignalObserverWrapper(props: P) {
       const observer = useObserve();
       observer.beginTracking();
