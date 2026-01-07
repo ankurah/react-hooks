@@ -1,0 +1,46 @@
+{
+  "name": "@ankurah/react-hooks",
+  "version": "0.1.0",
+  "description": "React hooks for Ankurah signal reactivity - works with both React Native (UniFFI) and React Web (WASM)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ankurah/react-hooks.git"
+  },
+  "keywords": [
+    "ankurah",
+    "react",
+    "signals",
+    "reactive",
+    "hooks"
+  ],
+  "author": "Ankurah",
+  "license": "MIT"
+}
