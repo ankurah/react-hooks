@@ -37,10 +37,20 @@
   "keywords": [
     "ankurah",
     "react",
+    "react-native",
     "signals",
     "reactive",
-    "hooks"
+    "hooks",
+    "state-management",
+    "real-time",
+    "sync",
+    "wasm",
+    "uniffi"
   ],
   "author": "Ankurah",
-  "license": "MIT"
+  "license": "MIT",
+  "homepage": "https://ankurah.org",
+  "bugs": {
+    "url": "https://github.com/ankurah/react-hooks/issues"
+  }
 }
